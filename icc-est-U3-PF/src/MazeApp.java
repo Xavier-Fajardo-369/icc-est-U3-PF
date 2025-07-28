@@ -1,22 +1,51 @@
-import javax.swing.SwingUtilities;
+import javax.swing.JOptionPane;
 
-import Controllers.MazeControllers;
-import Solver.solverImpl.MazeSolverDFS;
+import Models.Cell;
 import Views.MazeFrame;
+
 
 public class MazeApp {
     public static void main(String[] args) throws Exception {
-         // Asegura que la creación de la GUI se ejecute en el hilo de despacho de eventos
-        SwingUtilities.invokeLater(() -> {
-            // Crear la ventana principal del laberinto
-            MazeFrame frame = new MazeFrame();
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            int rows = 10;
+            int cols = 10;
 
-            // Crear el controlador del laberinto y pasarle la vista
-            MazeControllers controller = new MazeControllers(frame);
+            try {
+                String filasStr = JOptionPane.showInputDialog("Ingrese número de filas:");
+                String columnasStr = JOptionPane.showInputDialog("Ingrese número de columnas:");
 
-            // Mostrar la ventana
+                rows = Integer.parseInt(filasStr);
+                cols = Integer.parseInt(columnasStr);
+
+                if (rows <= 0 || cols <= 0) {
+                    throw new NumberFormatException();
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(null, "¡Por favor ingresa números positivos válidos!");
+                System.exit(0);
+            }
+
+            Cell[][] maze = new Cell[rows][cols];
+
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    maze[r][c] = new Cell(r, c, true); // todas caminables
+                }
+            }
+
+            Cell start = maze[0][0];
+            Cell end = maze[rows - 1][cols - 1];
+
+            MazeFrame frame = new MazeFrame(maze, start, end);
             frame.setVisible(true);
         });
-       
     }
-}
+
+
+    }
+
+
+    
+
+    
+

@@ -1,5 +1,12 @@
 package DAO;
 
-public class AlgorithmResultDAO {
-    
+import java.util.List;
+
+import Models.AlgorithmResult;
+
+public interface AlgorithmResultDAO {
+    void saveResult(AlgorithmResult result);
+    List<AlgorithmResult> getAllResults();
+    void clearResults();
 }
+
