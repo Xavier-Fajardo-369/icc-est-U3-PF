@@ -3,7 +3,8 @@ package Views;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.util.ArrayList;
-
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import javax.swing.*;
 
 import java.util.List;
@@ -17,6 +18,19 @@ public class MazePanel extends JPanel {
     private Cell end;
     private List<Cell> path = new ArrayList<>();
 
+    public MazePanel() {
+        int filas = 10;
+        int columnas = 10;
+        maze = new Cell[filas][columnas];
+        for (int r = 0; r < filas; r++) {
+            for (int c = 0; c < columnas; c++) {
+                maze[r][c] = new Cell(r, c, true);
+            }
+        }
+        start = null;
+        end = null;
+    }
+
     public MazePanel(Cell[][] maze, Cell start, Cell end) {
         this.maze = maze;
         this.start = start;
@@ -28,44 +42,56 @@ public class MazePanel extends JPanel {
         repaint();
     }
 
-    public Cell[][] getMaze() {
-        return maze;
+    public void setStart(Cell start) {
+        this.start = start;
+        repaint();
     }
 
-    public Cell getStart() {
-        return start;
+    public void setEnd(Cell end) {
+        this.end = end;
+        repaint();
     }
 
-    public Cell getEnd() {
-        return end;
-    }
+    public Cell[][] getMaze() { return maze; }
+    public Cell getStart() { return start; }
+    public Cell getEnd() { return end; }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (maze == null) return;
 
-        int cellSize = Math.min(getWidth() / maze[0].length, getHeight() / maze.length);
+        if (maze == null || maze.length == 0 || maze[0].length == 0) return;
 
-        for (int r = 0; r < maze.length; r++) {
-            for (int c = 0; c < maze[0].length; c++) {
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        int rows = maze.length;
+        int cols = maze[0].length;
+        int cellWidth = getWidth() / cols;
+        int cellHeight = getHeight() / rows;
+
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
                 Cell cell = maze[r][c];
+                int x = c * cellWidth;
+                int y = r * cellHeight;
+
                 if (!cell.isWalkable()) {
-                    g.setColor(Color.BLACK);
-                } else if (cell.equals(start)) {
-                    g.setColor(Color.GREEN);
-                } else if (cell.equals(end)) {
-                    g.setColor(Color.RED);
+                    g2.setColor(Color.BLACK);
+                } else if (start != null && cell.equals(start)) {
+                    g2.setColor(Color.GREEN);
+                } else if (end != null && cell.equals(end)) {
+                    g2.setColor(Color.RED);
                 } else if (path.contains(cell)) {
-                    g.setColor(Color.YELLOW);
+                    g2.setColor(Color.LIGHT_GRAY);
                 } else {
-                    g.setColor(Color.WHITE);
+                    g2.setColor(Color.WHITE);
                 }
-                g.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
-                g.setColor(Color.GRAY);
-                g.drawRect(c * cellSize, r * cellSize, cellSize, cellSize);
+
+                g2.fillRect(x, y, cellWidth, cellHeight);
+                g2.setColor(Color.GRAY);
+                g2.drawRect(x, y, cellWidth, cellHeight);
             }
         }
     }
 }
-

@@ -8,19 +8,25 @@ import Solver.MazeSolver;
 
 public class MazeSolverRecursivoCompletoBT implements MazeSolver {
     private List<Cell> bestPath = new ArrayList<>();
+    private int steps = 0;
 
+    @Override
     public List<Cell> solve(Cell[][] maze, Cell start, Cell end) {
         bestPath.clear();
-        backtrack(new ArrayList<>(), maze, start.row, start.col, end);
+        steps = 0;
+        backtrack(new ArrayList<>(), maze, start.getRow(), start.getCol(), end);
         return bestPath;
     }
 
     private void backtrack(List<Cell> currentPath, Cell[][] maze, int r, int c, Cell end) {
         if (r < 0 || r >= maze.length || c < 0 || c >= maze[0].length) return;
+
         Cell current = maze[r][c];
         if (!current.isWalkable() || currentPath.contains(current)) return;
 
         currentPath.add(current);
+        steps++;
+
         if (current.equals(end)) {
             if (bestPath.isEmpty() || currentPath.size() < bestPath.size())
                 bestPath = new ArrayList<>(currentPath);
@@ -33,11 +39,19 @@ public class MazeSolverRecursivoCompletoBT implements MazeSolver {
         for (int i = 0; i < 4; i++) {
             backtrack(currentPath, maze, r + dr[i], c + dc[i], end);
         }
+
         currentPath.remove(current);
     }
 
-    public String getName() {
-        return "Recursivo Completo BT";
-    }
+    @Override
+    public String getName() { return "Recursivo Completo BT"; }
+
+    @Override
+    public int getSteps() { return steps; }
+
+    @Override
+    public String toString() { return getName(); }
 }
+
+
 

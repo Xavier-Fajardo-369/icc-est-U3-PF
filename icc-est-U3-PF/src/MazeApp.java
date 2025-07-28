@@ -33,16 +33,13 @@ public class MazeApp {
                 }
             }
 
-            Cell start = maze[0][0];
-            Cell end = maze[rows - 1][cols - 1];
-
-            MazeFrame frame = new MazeFrame(maze, start, end);
+            MazeFrame frame = new MazeFrame(maze); // ✅ ¡Constructor corregido!
             frame.setVisible(true);
         });
     }
 
 
-    }
+}
 
 
     

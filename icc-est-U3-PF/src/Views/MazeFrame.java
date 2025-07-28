@@ -1,15 +1,20 @@
 package Views;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.util.List;
 
+import javax.swing.BoxLayout;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -17,7 +22,11 @@ import javax.swing.JTable;
 import Controllers.ResultadosManager;
 
 import java.awt.FlowLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
 import Models.Cell;
+import Models.ModoEdicion;
 import Models.Resultado;
 import Solver.MazeSolver;
 import Solver.solverImpl.MazeSolverBFS;
@@ -27,112 +36,121 @@ import Solver.solverImpl.MazeSolverRecursivoCompleto;
 import Solver.solverImpl.MazeSolverRecursivoCompletoBT;
 
 public class MazeFrame extends JFrame {
-    private final MazePanel mazePanel;
-    private final JComboBox<MazeSolver> comboSolver;
-    private final JButton solveBtn;
-    private final ResultadosManager resultadosManager = new ResultadosManager();
+    private MazePanel mazePanel;
+    private JComboBox<MazeSolver> comboSolver;
+    private JButton solveBtn;
+    private ResultadosManager resultadosManager = new ResultadosManager();
+    private ModoEdicion modoActual = ModoEdicion.NONE;
 
-    public MazeFrame(Cell[][] maze, Cell start, Cell end) {
+    public MazeFrame(Cell[][] maze) {
         setTitle("Solver de Laberintos");
         setSize(800, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Menú superior
-        JMenuBar menuBar = new JMenuBar();
-        setJMenuBar(menuBar);
-        JMenu archivo = new JMenu("Archivo");
-        menuBar.add(archivo);
-
-        JMenuItem nuevoItem = new JMenuItem("Nuevo Laberinto");
-        JMenuItem resultadosItem = new JMenuItem("Ver Resultados");
-        JMenuItem salirItem = new JMenuItem("Salir");
-
-        archivo.add(nuevoItem);
-        archivo.add(resultadosItem);
-        archivo.add(salirItem);
-
-        resultadosItem.addActionListener(e -> {
-            List<Resultado> lista = resultadosManager.obtenerResultados();
-            String[] columnas = { "Algoritmo", "Celdas", "Tiempo (ns)" };
-            Object[][] datos = new Object[lista.size()][3];
-
-            for (int i = 0; i < lista.size(); i++) {
-                Resultado r = lista.get(i);
-                datos[i][0] = r.getAlgoritmo();
-                datos[i][1] = r.getCeldasRecorridas();
-                datos[i][2] = r.getTiempoNano();
-            }
-
-            JTable tabla = new JTable(datos, columnas);
-            JScrollPane scroll = new JScrollPane(tabla);
-
-            JFrame ventana = new JFrame("Resultados Guardados");
-            ventana.setSize(400, 300);
-            ventana.add(scroll);
-            ventana.setLocationRelativeTo(null);
-            ventana.setVisible(true);
-        });
-
-        salirItem.addActionListener(e -> System.exit(0));
-
-        // Panel superior
+        // Panel superior para edición
         JPanel topPanel = new JPanel(new FlowLayout());
         JButton setStart = new JButton("Set Start");
         JButton setEnd = new JButton("Set End");
         JButton toggleWall = new JButton("Toggle Wall");
+        setStart.addActionListener(e -> modoActual = ModoEdicion.SET_START);
+        setEnd.addActionListener(e -> modoActual = ModoEdicion.SET_END);
+        toggleWall.addActionListener(e -> modoActual = ModoEdicion.TOGGLE_WALL);
         topPanel.add(setStart);
         topPanel.add(setEnd);
         topPanel.add(toggleWall);
         add(topPanel, BorderLayout.NORTH);
 
-        // Panel central del laberinto
-        mazePanel = new MazePanel(maze, start, end);
+        mazePanel = new MazePanel(maze, null, null);
         add(mazePanel, BorderLayout.CENTER);
 
-        // Panel inferior
-        JPanel bottomPanel = new JPanel(new FlowLayout());
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+
+        DefaultListModel<String> listaModel = new DefaultListModel<>();
+        listaModel.addElement("Recursivo");
+        listaModel.addElement("Recursivo Completo");
+        listaModel.addElement("Recursivo Completo BT");
+        listaModel.addElement("DFS");
+        listaModel.addElement("BFS");
+        JList<String> listaVisual = new JList<>(listaModel);
+        listaVisual.setPreferredSize(new Dimension(150, 100));
+        bottomPanel.add(new JScrollPane(listaVisual), BorderLayout.WEST);
+
+        JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         comboSolver = new JComboBox<>();
+        comboSolver.setMaximumRowCount(6);
+        comboSolver.setPreferredSize(new Dimension(200, 25));
+
+        comboSolver.addItem(new MazeSolverRecursivo());
+        comboSolver.addItem(new MazeSolverRecursivoCompleto());
         comboSolver.addItem(new MazeSolverRecursivoCompletoBT());
+        comboSolver.addItem(new MazeSolverDFS());
+        comboSolver.addItem(new MazeSolverBFS());
+
+        controlPanel.add(new JLabel("Algoritmo:"));
+        controlPanel.add(comboSolver);
 
         solveBtn = new JButton("Resolver");
-        JButton stepBtn = new JButton("Paso a paso");
         JButton clearBtn = new JButton("Limpiar");
-
-        bottomPanel.add(comboSolver);
-        bottomPanel.add(solveBtn);
-        bottomPanel.add(stepBtn);
-        bottomPanel.add(clearBtn);
-
+        controlPanel.add(solveBtn);
+        controlPanel.add(clearBtn);
+        bottomPanel.add(controlPanel, BorderLayout.CENTER);
         add(bottomPanel, BorderLayout.SOUTH);
 
-        // Acción del botón Resolver
+        listaVisual.addListSelectionListener(e -> {
+            String sel = listaVisual.getSelectedValue();
+            for (int i = 0; i < comboSolver.getItemCount(); i++) {
+                if (comboSolver.getItemAt(i).getName().contains(sel)) {
+                    comboSolver.setSelectedIndex(i);
+                    break;
+                }
+            }
+        });
+
         solveBtn.addActionListener(e -> {
+            if (mazePanel.getStart() == null || mazePanel.getEnd() == null) {
+                JOptionPane.showMessageDialog(this, "Debe seleccionar inicio y fin.");
+                return;
+            }
             MazeSolver solver = (MazeSolver) comboSolver.getSelectedItem();
             long inicio = System.nanoTime();
-
-            solver.solve(mazePanel.getMaze(), mazePanel.getStart(), mazePanel.getEnd());
-
+            List<Cell> camino = solver.solve(mazePanel.getMaze(), mazePanel.getStart(), mazePanel.getEnd());
             long fin = System.nanoTime();
-            int pasos = solver.getSteps(); // Asegúrate de tener este método en tu solver
 
-            Resultado r = new Resultado(solver.toString(), pasos, fin - inicio);
+            if (camino == null || camino.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "No se encontró un camino.");
+                return;
+            }
+
+            Resultado r = new Resultado(solver.getName(), solver.getSteps(), fin - inicio);
             resultadosManager.agregarResultado(r);
 
-            mazePanel.repaint();
+            mazePanel.setPath(camino);
+        });
+
+        mazePanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                Cell[][] mat = mazePanel.getMaze();
+                int rows = mat.length, cols = mat[0].length;
+                int cw = mazePanel.getWidth() / cols;
+                int ch = mazePanel.getHeight() / rows;
+                int c = e.getX() / cw;
+                int r = e.getY() / ch;
+                if (r < 0 || r >= rows || c < 0 || c >= cols) return;
+                Cell clicked = mat[r][c];
+                if (modoActual == ModoEdicion.SET_START) {
+                    mazePanel.setStart(clicked);
+                } else if (modoActual == ModoEdicion.SET_END) {
+                    mazePanel.setEnd(clicked);
+                } else if (modoActual == ModoEdicion.TOGGLE_WALL) {
+                    clicked.setWalkable(!clicked.isWalkable());
+                    mazePanel.repaint();
+                }
+            }
         });
 
         setVisible(true);
     }
 }
-
-
-
-
-
-
-
-    
-
-
