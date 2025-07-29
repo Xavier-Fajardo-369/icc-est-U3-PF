@@ -11,7 +11,11 @@
 **Integrantes:**
 - Integrante 1: [Xavier Fajardo "XF"]
 - Integrante 2: Adriano Rodas
+<<<<<<< HEAD
 - Integrante 3: Matias Leon
+=======
+- Integrante 3: [Cristian Arevalo]
+>>>>>>> 0b20d89 (Proyecto Final)
 - Integrante 4: [Nombre integrante 4]  
   **Fecha:** [29/07/2025]
 
@@ -179,11 +183,24 @@ Descripción de la interfaz, los botones, la forma en que el usuario interactúa
 ---
 
 ## 5. Controlador y Coordinación General
-*Espacio para que el Integrante 3 complete*
 
-Explicación del flujo general del programa, cómo interactúan las vistas con los modelos y controladores, eventos y manejo de datos.
+El sistema implementa el patrón **Modelo-Vista-Controlador (MVC)** para organizar la lógica del laberinto:
 
----
+1. **Vista (MazePanel, MazeFrame)**:
+   - Dibuja el laberinto.
+   - Captura los clics del usuario.
+   - Muestra resultados en la interfaz.
+
+2. **Controlador (MazeControllers.java)**:
+   - Escucha eventos del usuario (clics, botones).
+   - Actualiza el estado de las celdas (`Cell`) y la vista.
+   - Ejecuta el algoritmo de resolución (`MazeSolver`) seleccionado.
+   - Controla el flujo paso a paso.
+   - Guarda los resultados usando un DAO (`AlgorithmResultDAO`).
+
+3. **Modelo (Cell, AlgorithmResult, SolveResults...)**:
+   - Define la estructura del laberinto.
+   - Almacena los caminos y estadísticas de ejecución.
 
 ## 6. Persistencia y Gestión de Resultados
 *Espacio para que el Integrante 4 complete*
@@ -193,9 +210,9 @@ Descripción del sistema de almacenamiento en `results.csv`, prevención de dupl
 ---
 
 ## 7. Diagrama UML
-*Espacio para que el Integrante 3 o 4 complete*
-
 Diagrama UML que muestre las clases principales, sus relaciones, y el patrón MVC aplicado.
+
+![alt text](image.png)
 
 ---
 
