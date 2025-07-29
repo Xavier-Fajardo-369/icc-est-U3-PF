@@ -197,6 +197,24 @@ public class MazeFrame extends JFrame {
             new ComparisonDialog(this); 
         });
 
+        JButton borrarCaminoBtn = new JButton("Borrar Camino");
+
+            // Añadimos al panel de controles:
+        controlPanel.add(borrarCaminoBtn);
+
+            // Listener para borrar solo el camino:
+        borrarCaminoBtn.addActionListener(e -> {
+            // Limpiamos la ruta visualizada en el panel
+            mazePanel.setPath(new java.util.ArrayList<>());
+
+            // Reseteamos la ruta paso a paso también
+            caminoActualPasoAPaso = null;
+            pasoActual = 0;
+        });
+
+        setVisible(true);
+    
+
         // Mouse listener para editar el laberinto (inicio, fin, paredes)
         mazePanel.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
