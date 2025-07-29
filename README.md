@@ -11,7 +11,7 @@
 **Integrantes:**
 - Integrante 1: [Xavier Fajardo "XF"]
 - Integrante 2: Adriano Rodas
-- Integrante 3: [Nombre integrante 3]
+- Integrante 3: Matias Leon
 - Integrante 4: [Nombre integrante 4]  
   **Fecha:** [29/07/2025]
 
