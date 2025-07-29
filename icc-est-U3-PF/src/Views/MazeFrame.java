@@ -89,10 +89,13 @@ public class MazeFrame extends JFrame {
         solveBtn = new JButton("Resolver");
         JButton clearBtn = new JButton("Limpiar");
         JButton pasoBtn = new JButton("Paso a Paso"); // Nuevo botón paso a paso
+        JButton compareBtn = new JButton("Ver Gráficos");
 
         controlPanel.add(solveBtn);
         controlPanel.add(clearBtn);
         controlPanel.add(pasoBtn);
+        controlPanel.add(compareBtn);
+
 
         bottomPanel.add(controlPanel, BorderLayout.CENTER);
         add(bottomPanel, BorderLayout.SOUTH);
@@ -186,6 +189,12 @@ public class MazeFrame extends JFrame {
             } else {
                 JOptionPane.showMessageDialog(this, "Ya se mostró todo el camino.");
             }
+        });
+
+        //Boton mostrar graficas
+        compareBtn.addActionListener(e -> {
+            // Crea y muestra el diálogo con las imágenes
+            new ComparisonDialog(this); 
         });
 
         // Mouse listener para editar el laberinto (inicio, fin, paredes)
