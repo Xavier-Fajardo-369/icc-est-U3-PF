@@ -98,6 +98,7 @@ public class MazeFrame extends JFrame {
         bottomPanel.add(controlPanel, BorderLayout.CENTER);
         add(bottomPanel, BorderLayout.SOUTH);
 
+        // Listener para sincronizar la selección del JList con el JComboBox
         listaVisual.addListSelectionListener(e -> {
             String sel = listaVisual.getSelectedValue();
             for (int i = 0; i < comboSolver.getItemCount(); i++) {
@@ -149,6 +150,30 @@ public class MazeFrame extends JFrame {
                     mazePanel.repaint();
                 }
             }
+        });
+
+        // *** Aquí agregamos el listener para el botón Limpiar ***
+        clearBtn.addActionListener(e -> {
+            // Limpiar el camino visualizado
+            mazePanel.setPath(new java.util.ArrayList<>());
+
+            // Quitar inicio y fin
+            mazePanel.setStart(null);
+            mazePanel.setEnd(null);
+
+            // Restaurar todas las celdas como caminables
+            Cell[][] mazeActual = mazePanel.getMaze();
+            for (int r = 0; r < mazeActual.length; r++) {
+                for (int c = 0; c < mazeActual[0].length; c++) {
+                    mazeActual[r][c].setWalkable(true);
+                }
+            }
+
+            // Limpiar resultados guardados
+            resultadosManager.limpiarResultados();
+
+            // Repintar panel para reflejar los cambios
+            mazePanel.repaint();
         });
 
         setVisible(true);
