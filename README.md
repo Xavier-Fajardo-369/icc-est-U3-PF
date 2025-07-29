@@ -9,7 +9,7 @@
 **Materia:** Estructura de Datos / Algoritmos  
 **Proyecto:** Solver de Laberintos  
 **Integrantes:**
-- Integrante 1: [Nombre integrante 1]
+- Integrante 1: [Xavier Fajardo "XF"]
 - Integrante 2: Adriano Rodas
 - Integrante 3: [Nombre integrante 3]
 - Integrante 4: [Nombre integrante 4]  
