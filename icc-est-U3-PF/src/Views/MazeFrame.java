@@ -4,26 +4,19 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.util.List;
 
-import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
 
 import Controllers.ResultadosManager;
 
 import java.awt.FlowLayout;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 import Models.Cell;
 import Models.ModoEdicion;
@@ -38,6 +31,8 @@ import Solver.solverImpl.MazeSolverRecursivoCompletoBT;
 public class MazeFrame extends JFrame {
     private MazePanel mazePanel;
     private JComboBox<MazeSolver> comboSolver;
+    private List<Cell> caminoActualPasoAPaso;
+    private int pasoActual = 0;
     private JButton solveBtn;
     private ResultadosManager resultadosManager = new ResultadosManager();
     private ModoEdicion modoActual = ModoEdicion.NONE;
@@ -93,8 +88,12 @@ public class MazeFrame extends JFrame {
 
         solveBtn = new JButton("Resolver");
         JButton clearBtn = new JButton("Limpiar");
+        JButton pasoBtn = new JButton("Paso a Paso"); // Nuevo botón paso a paso
+
         controlPanel.add(solveBtn);
         controlPanel.add(clearBtn);
+        controlPanel.add(pasoBtn);
+
         bottomPanel.add(controlPanel, BorderLayout.CENTER);
         add(bottomPanel, BorderLayout.SOUTH);
 
@@ -109,6 +108,7 @@ public class MazeFrame extends JFrame {
             }
         });
 
+        // Botón Resolver - calcula el camino completo
         solveBtn.addActionListener(e -> {
             if (mazePanel.getStart() == null || mazePanel.getEnd() == null) {
                 JOptionPane.showMessageDialog(this, "Debe seleccionar inicio y fin.");
@@ -128,8 +128,67 @@ public class MazeFrame extends JFrame {
             resultadosManager.agregarResultado(r);
 
             mazePanel.setPath(camino);
+
+            // Reseteamos el paso a paso porque ya resolvió completamente
+            caminoActualPasoAPaso = null;
+            pasoActual = 0;
         });
 
+        // Botón Limpiar - limpia todo
+        clearBtn.addActionListener(e -> {
+            // Limpiar el camino visualizado
+            mazePanel.setPath(new java.util.ArrayList<>());
+
+            // Quitar inicio y fin
+            mazePanel.setStart(null);
+            mazePanel.setEnd(null);
+
+            // Restaurar todas las celdas como caminables
+            Cell[][] mazeActual = mazePanel.getMaze();
+            for (int r = 0; r < mazeActual.length; r++) {
+                for (int c = 0; c < mazeActual[0].length; c++) {
+                    mazeActual[r][c].setWalkable(true);
+                }
+            }
+
+            // Limpiar resultados guardados
+            resultadosManager.limpiarResultados();
+
+            // Reseteamos paso a paso
+            caminoActualPasoAPaso = null;
+            pasoActual = 0;
+
+            // Repintar panel para reflejar los cambios
+            mazePanel.repaint();
+        });
+
+        // Botón Paso a Paso - muestra el camino celda por celda
+        pasoBtn.addActionListener(e -> {
+            if (mazePanel.getStart() == null || mazePanel.getEnd() == null) {
+                JOptionPane.showMessageDialog(this, "Debe seleccionar inicio y fin.");
+                return;
+            }
+
+            if (caminoActualPasoAPaso == null || pasoActual == 0) {
+                MazeSolver solver = (MazeSolver) comboSolver.getSelectedItem();
+                caminoActualPasoAPaso = solver.solve(mazePanel.getMaze(), mazePanel.getStart(), mazePanel.getEnd());
+                if (caminoActualPasoAPaso == null || caminoActualPasoAPaso.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "No se encontró camino.");
+                    return;
+                }
+                pasoActual = 0;
+            }
+
+            if (pasoActual < caminoActualPasoAPaso.size()) {
+                List<Cell> parcial = caminoActualPasoAPaso.subList(0, pasoActual + 1);
+                mazePanel.setPath(parcial);
+                pasoActual++;
+            } else {
+                JOptionPane.showMessageDialog(this, "Ya se mostró todo el camino.");
+            }
+        });
+
+        // Mouse listener para editar el laberinto (inicio, fin, paredes)
         mazePanel.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -150,30 +209,6 @@ public class MazeFrame extends JFrame {
                     mazePanel.repaint();
                 }
             }
-        });
-
-        // *** Aquí agregamos el listener para el botón Limpiar ***
-        clearBtn.addActionListener(e -> {
-            // Limpiar el camino visualizado
-            mazePanel.setPath(new java.util.ArrayList<>());
-
-            // Quitar inicio y fin
-            mazePanel.setStart(null);
-            mazePanel.setEnd(null);
-
-            // Restaurar todas las celdas como caminables
-            Cell[][] mazeActual = mazePanel.getMaze();
-            for (int r = 0; r < mazeActual.length; r++) {
-                for (int c = 0; c < mazeActual[0].length; c++) {
-                    mazeActual[r][c].setWalkable(true);
-                }
-            }
-
-            // Limpiar resultados guardados
-            resultadosManager.limpiarResultados();
-
-            // Repintar panel para reflejar los cambios
-            mazePanel.repaint();
         });
 
         setVisible(true);
