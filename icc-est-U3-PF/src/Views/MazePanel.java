@@ -18,6 +18,7 @@ public class MazePanel extends JPanel {
     private Cell end;
     private List<Cell> path = new ArrayList<>();
 
+    // Constructor por defecto (10x10)
     public MazePanel() {
         int filas = 10;
         int columnas = 10;
@@ -31,14 +32,21 @@ public class MazePanel extends JPanel {
         end = null;
     }
 
+    // Constructor parametrizado
     public MazePanel(Cell[][] maze, Cell start, Cell end) {
         this.maze = maze;
         this.start = start;
         this.end = end;
     }
 
-    public void setPath(List<Cell> path) {
-        this.path = path;
+    // ✅ Métodos públicos requeridos
+    public Cell[][] getMaze() { return maze; }
+
+    public void setMaze(Cell[][] nuevoMaze) {
+        this.maze = nuevoMaze;
+        this.start = null;
+        this.end = null;
+        this.path.clear();
         repaint();
     }
 
@@ -52,10 +60,15 @@ public class MazePanel extends JPanel {
         repaint();
     }
 
-    public Cell[][] getMaze() { return maze; }
+    public void setPath(List<Cell> path) {
+        this.path = path;
+        repaint();
+    }
+
     public Cell getStart() { return start; }
     public Cell getEnd() { return end; }
 
+    // 🔹 Dibujo gráfico de celdas
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -95,3 +108,4 @@ public class MazePanel extends JPanel {
         }
     }
 }
+

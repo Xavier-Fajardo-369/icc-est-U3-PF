@@ -33,7 +33,7 @@ public class MazeApp {
                 }
             }
 
-            MazeFrame frame = new MazeFrame(maze); // ✅ ¡Constructor corregido!
+            MazeFrame frame = new MazeFrame(maze); //  ¡Constructor corregido!
             frame.setVisible(true);
         });
     }

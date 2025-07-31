@@ -10,9 +10,13 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 
 import Controllers.ResultadosManager;
 
@@ -44,7 +48,82 @@ public class MazeFrame extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Panel superior para edición
+        // Menú "Archivo"
+        JMenuBar menuBar = new JMenuBar();
+        JMenu archivoMenu = new JMenu("Archivo");
+
+        JMenuItem nuevoItem = new JMenuItem("Nuevo Laberinto");
+        nuevoItem.addActionListener(e -> {
+            try {
+                String filasStr = JOptionPane.showInputDialog(this, "Ingrese número de filas:");
+                String columnasStr = JOptionPane.showInputDialog(this, "Ingrese número de columnas:");
+                if (filasStr == null || columnasStr == null) return;
+
+                int rows = Integer.parseInt(filasStr.trim());
+                int cols = Integer.parseInt(columnasStr.trim());
+                if (rows <= 0 || cols <= 0) throw new NumberFormatException();
+
+                Cell[][] nuevo = new Cell[rows][cols];
+                for (int r = 0; r < rows; r++) {
+                    for (int c = 0; c < cols; c++) {
+                        nuevo[r][c] = new Cell(r, c, true);
+                    }
+                }
+
+                mazePanel.setMaze(nuevo);
+                mazePanel.setStart(null);
+                mazePanel.setEnd(null);
+                mazePanel.setPath(null);
+                caminoActualPasoAPaso = null;
+                pasoActual = 0;
+                mazePanel.repaint();
+
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Valores inválidos. Intente nuevamente.");
+            }
+        });
+
+        JMenuItem verResultadosItem = new JMenuItem("Ver Resultados");
+        verResultadosItem.addActionListener(e -> {
+            JFrame resultadoFrame = new JFrame("Resultados Guardados");
+            resultadoFrame.setSize(600, 400);
+            resultadoFrame.setLocationRelativeTo(this);
+            resultadoFrame.setLayout(new BorderLayout());
+
+            JTable tabla = resultadosManager.generarTablaResultados();
+            resultadoFrame.add(new JScrollPane(tabla), BorderLayout.CENTER);
+
+            JPanel botonesPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            JButton btnLimpiar = new JButton("Limpiar Resultados");
+            JButton btnGraficar = new JButton("Graficar Resultados");
+
+            btnLimpiar.addActionListener(ev -> {
+                resultadosManager.limpiarResultados();
+                JOptionPane.showMessageDialog(resultadoFrame, "Resultados limpiados.");
+                resultadoFrame.dispose();
+            });
+
+            btnGraficar.addActionListener(ev -> {
+                JFrame grafico = new JFrame("Comparación de algoritmos");
+                grafico.setSize(800, 500);
+                grafico.setLocationRelativeTo(resultadoFrame);
+                grafico.setLayout(new BorderLayout());
+                grafico.add(new GraficosResultadosPanel(resultadosManager.obtenerResultados()), BorderLayout.CENTER);
+                grafico.setVisible(true);
+            });
+
+            botonesPanel.add(btnLimpiar);
+            botonesPanel.add(btnGraficar);
+            resultadoFrame.add(botonesPanel, BorderLayout.SOUTH);
+            resultadoFrame.setVisible(true);
+        });
+
+        archivoMenu.add(nuevoItem);
+        archivoMenu.add(verResultadosItem);
+        menuBar.add(archivoMenu);
+        setJMenuBar(menuBar);
+
+        // Panel de edición
         JPanel topPanel = new JPanel(new FlowLayout());
         JButton setStart = new JButton("Set Start");
         JButton setEnd = new JButton("Set End");
@@ -57,26 +136,26 @@ public class MazeFrame extends JFrame {
         topPanel.add(toggleWall);
         add(topPanel, BorderLayout.NORTH);
 
+        // Panel del laberinto
         mazePanel = new MazePanel(maze, null, null);
         add(mazePanel, BorderLayout.CENTER);
 
+        // Panel inferior
         JPanel bottomPanel = new JPanel(new BorderLayout());
-
         DefaultListModel<String> listaModel = new DefaultListModel<>();
         listaModel.addElement("Recursivo");
         listaModel.addElement("Recursivo Completo");
         listaModel.addElement("Recursivo Completo BT");
         listaModel.addElement("DFS");
         listaModel.addElement("BFS");
+
         JList<String> listaVisual = new JList<>(listaModel);
         listaVisual.setPreferredSize(new Dimension(150, 100));
         bottomPanel.add(new JScrollPane(listaVisual), BorderLayout.WEST);
 
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         comboSolver = new JComboBox<>();
-        comboSolver.setMaximumRowCount(6);
         comboSolver.setPreferredSize(new Dimension(200, 25));
-
         comboSolver.addItem(new MazeSolverRecursivo());
         comboSolver.addItem(new MazeSolverRecursivoCompleto());
         comboSolver.addItem(new MazeSolverRecursivoCompletoBT());
@@ -88,19 +167,16 @@ public class MazeFrame extends JFrame {
 
         solveBtn = new JButton("Resolver");
         JButton clearBtn = new JButton("Limpiar");
-        JButton pasoBtn = new JButton("Paso a Paso"); // Nuevo botón paso a paso
-        JButton compareBtn = new JButton("Ver Gráficos");
+        JButton pasoBtn = new JButton("Paso a Paso");
 
         controlPanel.add(solveBtn);
         controlPanel.add(clearBtn);
         controlPanel.add(pasoBtn);
-        controlPanel.add(compareBtn);
-
 
         bottomPanel.add(controlPanel, BorderLayout.CENTER);
         add(bottomPanel, BorderLayout.SOUTH);
 
-        // Listener para sincronizar la selección del JList con el JComboBox
+        // Sincronización entre lista visual y combo
         listaVisual.addListSelectionListener(e -> {
             String sel = listaVisual.getSelectedValue();
             for (int i = 0; i < comboSolver.getItemCount(); i++) {
@@ -111,7 +187,7 @@ public class MazeFrame extends JFrame {
             }
         });
 
-        // Botón Resolver - calcula el camino completo
+        // Acción "Resolver"
         solveBtn.addActionListener(e -> {
             if (mazePanel.getStart() == null || mazePanel.getEnd() == null) {
                 JOptionPane.showMessageDialog(this, "Debe seleccionar inicio y fin.");
@@ -129,43 +205,27 @@ public class MazeFrame extends JFrame {
 
             Resultado r = new Resultado(solver.getName(), solver.getSteps(), fin - inicio);
             resultadosManager.agregarResultado(r);
-
             mazePanel.setPath(camino);
-
-            // Reseteamos el paso a paso porque ya resolvió completamente
             caminoActualPasoAPaso = null;
             pasoActual = 0;
         });
 
-        // Botón Limpiar - limpia todo
+        // Acción "Limpiar"
         clearBtn.addActionListener(e -> {
-            // Limpiar el camino visualizado
-            mazePanel.setPath(new java.util.ArrayList<>());
-
-            // Quitar inicio y fin
-            mazePanel.setStart(null);
-            mazePanel.setEnd(null);
-
-            // Restaurar todas las celdas como caminables
-            Cell[][] mazeActual = mazePanel.getMaze();
-            for (int r = 0; r < mazeActual.length; r++) {
-                for (int c = 0; c < mazeActual[0].length; c++) {
-                    mazeActual[r][c].setWalkable(true);
+            Cell[][] m = mazePanel.getMaze();
+            for (int r = 0; r < m.length; r++) {
+                for (int c = 0; c < m[0].length; c++) {
+                    m[r][c].setVisited(false);
+                    m[r][c].setPath(false);
                 }
             }
-
-            // Limpiar resultados guardados
-            resultadosManager.limpiarResultados();
-
-            // Reseteamos paso a paso
+            mazePanel.setPath(new java.util.ArrayList<>());
             caminoActualPasoAPaso = null;
             pasoActual = 0;
-
-            // Repintar panel para reflejar los cambios
             mazePanel.repaint();
         });
 
-        // Botón Paso a Paso - muestra el camino celda por celda
+        // Acción "Paso a Paso"
         pasoBtn.addActionListener(e -> {
             if (mazePanel.getStart() == null || mazePanel.getEnd() == null) {
                 JOptionPane.showMessageDialog(this, "Debe seleccionar inicio y fin.");
@@ -191,31 +251,6 @@ public class MazeFrame extends JFrame {
             }
         });
 
-        //Boton mostrar graficas
-        compareBtn.addActionListener(e -> {
-            // Crea y muestra el diálogo con las imágenes
-            new ComparisonDialog(this); 
-        });
-
-        JButton borrarCaminoBtn = new JButton("Borrar Camino");
-
-            // Añadimos al panel de controles:
-        controlPanel.add(borrarCaminoBtn);
-
-            // Listener para borrar solo el camino:
-        borrarCaminoBtn.addActionListener(e -> {
-            // Limpiamos la ruta visualizada en el panel
-            mazePanel.setPath(new java.util.ArrayList<>());
-
-            // Reseteamos la ruta paso a paso también
-            caminoActualPasoAPaso = null;
-            pasoActual = 0;
-        });
-
-        setVisible(true);
-    
-
-        // Mouse listener para editar el laberinto (inicio, fin, paredes)
         mazePanel.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -241,3 +276,6 @@ public class MazeFrame extends JFrame {
         setVisible(true);
     }
 }
+
+
+
