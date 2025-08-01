@@ -13,17 +13,17 @@ public class GraficosResultadosPanel extends JPanel {
 
     public GraficosResultadosPanel(List<Resultado> resultados) {
         setLayout(new BorderLayout());
+
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 
         for (Resultado r : resultados) {
-            dataset.addValue(r.getCeldasRecorridas(), "Celdas Recorridas", r.getAlgoritmo());
             dataset.addValue(r.getTiempoNano(), "Tiempo (ns)", r.getAlgoritmo());
         }
 
-        JFreeChart chart = ChartFactory.createBarChart(
-            "Comparación de Algoritmos",
+        JFreeChart chart = ChartFactory.createLineChart(
+            "Tiempos de Ejecución por Algoritmo",
             "Algoritmo",
-            "Valor",
+            "Tiempo (ns)",
             dataset
         );
 
@@ -31,5 +31,9 @@ public class GraficosResultadosPanel extends JPanel {
         add(chartPanel, BorderLayout.CENTER);
     }
 }
+
+
+
+
 
 

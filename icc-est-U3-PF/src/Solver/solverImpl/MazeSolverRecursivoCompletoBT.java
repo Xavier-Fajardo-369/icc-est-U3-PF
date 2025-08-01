@@ -44,14 +44,27 @@ public class MazeSolverRecursivoCompletoBT implements MazeSolver {
     }
 
     @Override
-    public String getName() { return "Recursivo Completo BT"; }
+    public String getName() {
+        return "Recursivo Completo BT";
+    }
 
     @Override
-    public int getSteps() { return steps; }
+    public String getDescription() {
+        return "Recursivo completo con retroceso en cuatro direcciones (BT)";
+    }
 
     @Override
-    public String toString() { return getName(); }
+    public int getSteps() {
+        return steps;
+    }
+
+    @Override
+    public String toString() {
+        return getName();
+    }
 }
+
+
 
 
 

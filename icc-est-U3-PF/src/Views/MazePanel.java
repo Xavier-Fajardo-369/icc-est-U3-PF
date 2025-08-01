@@ -16,7 +16,7 @@ public class MazePanel extends JPanel {
     private Cell[][] maze;
     private Cell start;
     private Cell end;
-    private List<Cell> path = new ArrayList<>();
+    private List<Cell> path;
 
     // Constructor por defecto (10x10)
     public MazePanel() {
@@ -30,6 +30,7 @@ public class MazePanel extends JPanel {
         }
         start = null;
         end = null;
+        path = null;
     }
 
     // Constructor parametrizado
@@ -37,16 +38,15 @@ public class MazePanel extends JPanel {
         this.maze = maze;
         this.start = start;
         this.end = end;
+        this.path = null;
     }
 
-    // ✅ Métodos públicos requeridos
-    public Cell[][] getMaze() { return maze; }
-
+    // Setters
     public void setMaze(Cell[][] nuevoMaze) {
         this.maze = nuevoMaze;
         this.start = null;
         this.end = null;
-        this.path.clear();
+        this.path = null;
         repaint();
     }
 
@@ -62,13 +62,48 @@ public class MazePanel extends JPanel {
 
     public void setPath(List<Cell> path) {
         this.path = path;
+
+        // Limpiar marcas anteriores
+        for (Cell[] row : maze) {
+            for (Cell cell : row) {
+                cell.setPath(false);
+            }
+        }
+
+        // Marcar nuevo camino
+        if (path != null) {
+            for (Cell cell : path) {
+                cell.setPath(true);
+            }
+        }
+
         repaint();
     }
 
-    public Cell getStart() { return start; }
-    public Cell getEnd() { return end; }
+    public void clearPath() {
+        this.path = null;
+        for (Cell[] row : maze) {
+            for (Cell cell : row) {
+                cell.setPath(false);
+                cell.setVisited(false);
+            }
+        }
+        repaint();
+    }
 
-    // 🔹 Dibujo gráfico de celdas
+    public Cell[][] getMaze() {
+        return maze;
+    }
+
+    public Cell getStart() {
+        return start;
+    }
+
+    public Cell getEnd() {
+        return end;
+    }
+
+    // Dibujo del laberinto
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -95,7 +130,9 @@ public class MazePanel extends JPanel {
                     g2.setColor(Color.GREEN);
                 } else if (end != null && cell.equals(end)) {
                     g2.setColor(Color.RED);
-                } else if (path.contains(cell)) {
+                } else if (cell.isPath()) {
+                    g2.setColor(Color.BLUE);
+                } else if (cell.isVisited()) {
                     g2.setColor(Color.LIGHT_GRAY);
                 } else {
                     g2.setColor(Color.WHITE);
@@ -108,4 +145,9 @@ public class MazePanel extends JPanel {
         }
     }
 }
+
+
+
+
+
 

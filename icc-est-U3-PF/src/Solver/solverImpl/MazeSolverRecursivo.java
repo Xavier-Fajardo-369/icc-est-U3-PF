@@ -29,15 +29,15 @@ public class MazeSolverRecursivo implements MazeSolver {
 
         if (current.equals(end)) return true;
 
-        // Solo abajo (⬇️) y a la izquierda (◀️)
-        int[] dr = {1, 0};   // fila +1 (abajo), sin cambio vertical
-        int[] dc = {0, -1};  // sin cambio horizontal, columna -1 (izquierda)
+        // 🔽⬅️ Solo abajo y a la izquierda
+        int[] dr = {1, 0};
+        int[] dc = {0, -1};
 
         for (int i = 0; i < 2; i++) {
             if (search(maze, r + dr[i], c + dc[i], end)) return true;
         }
 
-        path.remove(current);
+        // ❌ Sin retroceso (no se remueve del path)
         return false;
     }
 
@@ -45,10 +45,17 @@ public class MazeSolverRecursivo implements MazeSolver {
     public String getName() { return "Recursivo"; }
 
     @Override
+    public String getDescription() {
+        return "Recorrido recursivo limitado a abajo e izquierda, sin retroceso";
+    }
+
+    @Override
     public int getSteps() { return steps; }
 
     @Override
     public String toString() { return getName(); }
 }
+
+
 
 

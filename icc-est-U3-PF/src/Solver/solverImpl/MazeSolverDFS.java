@@ -11,10 +11,6 @@ import java.util.Stack;
 import Models.Cell;
 import Solver.MazeSolver;
 
-
-
-
-
 public class MazeSolverDFS implements MazeSolver {
     private int steps = 0;
 
@@ -62,6 +58,11 @@ public class MazeSolverDFS implements MazeSolver {
 
     @Override
     public String getName() { return "DFS"; }
+
+    @Override
+    public String getDescription() {
+        return "Recorrido en profundidad usando pila (Stack)";
+    }
 
     @Override
     public int getSteps() { return steps; }

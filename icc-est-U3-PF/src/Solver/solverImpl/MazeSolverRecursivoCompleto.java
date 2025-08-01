@@ -42,12 +42,24 @@ public class MazeSolverRecursivoCompleto implements MazeSolver {
     }
 
     @Override
-    public String getName() { return "Recursivo Completo"; }
+    public String getName() {
+        return "Recursivo Completo";
+    }
 
     @Override
-    public int getSteps() { return steps; }
+    public String getDescription() {
+        return "Explora todas las direcciones buscando el camino más corto sin repetir celdas";
+    }
 
     @Override
-    public String toString() { return getName(); }
+    public int getSteps() {
+        return steps;
+    }
+
+    @Override
+    public String toString() {
+        return getName();
+    }
 }
+
 

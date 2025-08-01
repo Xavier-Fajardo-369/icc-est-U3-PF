@@ -40,6 +40,7 @@ public class MazeFrame extends JFrame {
     private JButton solveBtn;
     private ResultadosManager resultadosManager = new ResultadosManager();
     private ModoEdicion modoActual = ModoEdicion.NONE;
+    private JLabel lblDescripcion;
 
     public MazeFrame(Cell[][] maze) {
         setTitle("Solver de Laberintos");
@@ -73,7 +74,7 @@ public class MazeFrame extends JFrame {
                 mazePanel.setMaze(nuevo);
                 mazePanel.setStart(null);
                 mazePanel.setEnd(null);
-                mazePanel.setPath(null);
+                mazePanel.setPath(new java.util.ArrayList<>());
                 caminoActualPasoAPaso = null;
                 pasoActual = 0;
                 mazePanel.repaint();
@@ -123,22 +124,65 @@ public class MazeFrame extends JFrame {
         menuBar.add(archivoMenu);
         setJMenuBar(menuBar);
 
-        // Panel de edición
+        // Panel de edición (botones para modo)
         JPanel topPanel = new JPanel(new FlowLayout());
         JButton setStart = new JButton("Set Start");
         JButton setEnd = new JButton("Set End");
         JButton toggleWall = new JButton("Toggle Wall");
+
         setStart.addActionListener(e -> modoActual = ModoEdicion.SET_START);
         setEnd.addActionListener(e -> modoActual = ModoEdicion.SET_END);
         toggleWall.addActionListener(e -> modoActual = ModoEdicion.TOGGLE_WALL);
+
         topPanel.add(setStart);
         topPanel.add(setEnd);
         topPanel.add(toggleWall);
+
         add(topPanel, BorderLayout.NORTH);
 
         // Panel del laberinto
         mazePanel = new MazePanel(maze, null, null);
         add(mazePanel, BorderLayout.CENTER);
+
+        // Añadir MouseListener para interactuar con el laberinto y modificar según modoActual
+        mazePanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                int cols = mazePanel.getMaze()[0].length;
+                int rows = mazePanel.getMaze().length;
+
+                int cellWidth = mazePanel.getWidth() / cols;
+                int cellHeight = mazePanel.getHeight() / rows;
+
+                int col = e.getX() / cellWidth;
+                int row = e.getY() / cellHeight;
+
+                if (row < 0 || row >= rows || col < 0 || col >= cols) return;
+
+                Cell clickedCell = mazePanel.getMaze()[row][col];
+
+                switch (modoActual) {
+                    case SET_START:
+                        mazePanel.setStart(clickedCell);
+                        break;
+                    case SET_END:
+                        mazePanel.setEnd(clickedCell);
+                        break;
+                    case TOGGLE_WALL:
+                        clickedCell.setWalkable(!clickedCell.isWalkable());
+                        break;
+                    default:
+                        // No hacer nada
+                        break;
+                }
+
+                mazePanel.clearPath();
+                caminoActualPasoAPaso = null;
+                pasoActual = 0;
+
+                mazePanel.repaint();
+            }
+        });
 
         // Panel inferior
         JPanel bottomPanel = new JPanel(new BorderLayout());
@@ -174,55 +218,22 @@ public class MazeFrame extends JFrame {
         controlPanel.add(pasoBtn);
 
         bottomPanel.add(controlPanel, BorderLayout.CENTER);
+
+        // Label para descripción algoritmo
+        lblDescripcion = new JLabel("Descripción del algoritmo");
+        bottomPanel.add(lblDescripcion, BorderLayout.SOUTH);
+
         add(bottomPanel, BorderLayout.SOUTH);
 
         // Sincronización entre lista visual y combo
         listaVisual.addListSelectionListener(e -> {
             String sel = listaVisual.getSelectedValue();
             for (int i = 0; i < comboSolver.getItemCount(); i++) {
-                if (comboSolver.getItemAt(i).getName().contains(sel)) {
+                if (comboSolver.getItemAt(i).toString().equals(sel)) {
                     comboSolver.setSelectedIndex(i);
                     break;
                 }
             }
-        });
-
-        // Acción "Resolver"
-        solveBtn.addActionListener(e -> {
-            if (mazePanel.getStart() == null || mazePanel.getEnd() == null) {
-                JOptionPane.showMessageDialog(this, "Debe seleccionar inicio y fin.");
-                return;
-            }
-            MazeSolver solver = (MazeSolver) comboSolver.getSelectedItem();
-            long inicio = System.nanoTime();
-            List<Cell> camino = solver.solve(mazePanel.getMaze(), mazePanel.getStart(), mazePanel.getEnd());
-            long fin = System.nanoTime();
-
-            if (camino == null || camino.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "No se encontró un camino.");
-                return;
-            }
-
-            Resultado r = new Resultado(solver.getName(), solver.getSteps(), fin - inicio);
-            resultadosManager.agregarResultado(r);
-            mazePanel.setPath(camino);
-            caminoActualPasoAPaso = null;
-            pasoActual = 0;
-        });
-
-        // Acción "Limpiar"
-        clearBtn.addActionListener(e -> {
-            Cell[][] m = mazePanel.getMaze();
-            for (int r = 0; r < m.length; r++) {
-                for (int c = 0; c < m[0].length; c++) {
-                    m[r][c].setVisited(false);
-                    m[r][c].setPath(false);
-                }
-            }
-            mazePanel.setPath(new java.util.ArrayList<>());
-            caminoActualPasoAPaso = null;
-            pasoActual = 0;
-            mazePanel.repaint();
         });
 
         // Acción "Paso a Paso"
@@ -247,35 +258,66 @@ public class MazeFrame extends JFrame {
                 mazePanel.setPath(parcial);
                 pasoActual++;
             } else {
-                JOptionPane.showMessageDialog(this, "Ya se mostró todo el camino.");
+                JOptionPane.showMessageDialog(this, "Ya se mostró todo el camino paso a paso.");
+                caminoActualPasoAPaso = null;
+                pasoActual = 0;
             }
         });
 
-        mazePanel.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                Cell[][] mat = mazePanel.getMaze();
-                int rows = mat.length, cols = mat[0].length;
-                int cw = mazePanel.getWidth() / cols;
-                int ch = mazePanel.getHeight() / rows;
-                int c = e.getX() / cw;
-                int r = e.getY() / ch;
-                if (r < 0 || r >= rows || c < 0 || c >= cols) return;
-                Cell clicked = mat[r][c];
-                if (modoActual == ModoEdicion.SET_START) {
-                    mazePanel.setStart(clicked);
-                } else if (modoActual == ModoEdicion.SET_END) {
-                    mazePanel.setEnd(clicked);
-                } else if (modoActual == ModoEdicion.TOGGLE_WALL) {
-                    clicked.setWalkable(!clicked.isWalkable());
-                    mazePanel.repaint();
+        // Acción "Resolver instantáneamente"
+        solveBtn.addActionListener(e -> {
+            if (mazePanel.getStart() == null || mazePanel.getEnd() == null) {
+                JOptionPane.showMessageDialog(this, "Debe seleccionar inicio y fin.");
+                return;
+            }
+
+            MazeSolver solver = (MazeSolver) comboSolver.getSelectedItem();
+            List<Cell> camino = solver.solve(mazePanel.getMaze(), mazePanel.getStart(), mazePanel.getEnd());
+            if (camino == null || camino.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "No se encontró camino.");
+            } else {
+                mazePanel.setPath(camino);
+            }
+        });
+
+        // Acción "Limpiar"
+        clearBtn.addActionListener(e -> {
+            Cell[][] m = mazePanel.getMaze();
+            for (int r = 0; r < m.length; r++) {
+                for (int c = 0; c < m[0].length; c++) {
+                    m[r][c].setVisited(false);
+                    m[r][c].setPath(false);
                 }
             }
+            mazePanel.setPath(new java.util.ArrayList<>());
+            caminoActualPasoAPaso = null;
+            pasoActual = 0;
+            mazePanel.repaint();
+        });
+
+        // Actualizar descripción del algoritmo seleccionado
+        comboSolver.addActionListener(e -> {
+            MazeSolver solver = (MazeSolver) comboSolver.getSelectedItem();
+            lblDescripcion.setText(solver.getDescription());
         });
 
         setVisible(true);
     }
 }
+
+
+
+
+        
+
+
+
+
+
+        
+
+
+
 
 
 

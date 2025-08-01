@@ -72,6 +72,11 @@ public class MazeSolverBFS implements MazeSolver {
     }
 
     @Override
+    public String getDescription() {
+        return "Búsqueda en anchura usando cola, reconstruye el camino más corto";
+    }
+
+    @Override
     public int getSteps() {
         return steps;
     }
